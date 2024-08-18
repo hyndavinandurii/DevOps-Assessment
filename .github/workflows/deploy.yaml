@@ -1,0 +1,51 @@
+# .github/workflows/deploy.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-south-1
+      ECR_REPOSITORY_API: notification_api
+      ECR_REPOSITORY_SENDER: email_sender
+      CONTAINER_NAME_API: pt-notification-service
+      CONTAINER_NAME_SENDER: email-sender-service
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push Docker image for API
+      run: |
+        docker build -t $ECR_REPOSITORY_API:latest -f Dockerfile.api .
+        docker tag $ECR_REPOSITORY_API:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY_API:latest
+        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY_API:latest
+
+    - name: Build and push Docker image for Sender
+      run: |
+        docker build -t $ECR_REPOSITORY_SENDER:latest -f Dockerfile.sender .
+        docker tag $ECR_REPOSITORY_SENDER:latest ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY_SENDER:latest
+        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY_SENDER:latest
+
+    - name: Deploy to ECS using Terraform
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        cd terraform
+        terraform init
+        terraform apply -auto-approve

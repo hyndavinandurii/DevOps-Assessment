@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"autoscaling","Source":"./autoscaling.tf","Dir":"autoscaling.tf"},{"Key":"cluster","Source":"./cluster.tf","Dir":"cluster.tf"},{"Key":"ecr","Source":"./ecr.tf","Dir":"ecr.tf"},{"Key":"secrets_manager","Source":"./secret-manager.tf","Dir":""},{"Key":"service","Source":"./service.tf","Dir":"service.tf"}]}
